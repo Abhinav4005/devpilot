@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import indexRoutes from "./routes/index.route.js";
 import { errorHandler } from "./common/middleware/errorHandler.js";
 import { connectDB } from "./database/database.js";
@@ -10,6 +11,11 @@ dotenv.config();
 const PORT = process.env.PORT || 5000;
 
 const app = express();
+
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 
 app.use(express.json());
 

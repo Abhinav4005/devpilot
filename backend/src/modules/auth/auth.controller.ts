@@ -23,6 +23,7 @@ export class AuthController {
             httpOnly: true,
             sameSite: "lax",
             secure: true,
+            maxAge: 15 * 60 * 60 * 1000
         });
 
         res.cookie("refreshToken", refreshToken, {
@@ -50,7 +51,54 @@ export class AuthController {
         )
     }
 
-    
+    refresh = async(req: Request, res: Response): Promise<void> => {
+        const refreshToken = req.cookies.refreshToken;
+        const { accessToken, refreshToken: newRefreshToken } = await authService.refresh(refreshToken);
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: true,
+        });
+
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: true,
+        });
+
+        res.status(HTTP_STATUS.OK).json(
+            new ApiResponse(
+                HTTP_STATUS.OK,
+                null,
+                "Access Token refreshed successfully"
+            )
+        );
+    }
+
+    logout = async(req: Request, res: Response): Promise<void> => {
+        const refreshToken = req.cookies.refreshToken;
+        await authService.logout(refreshToken);
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            sameSite:"lax",
+            maxAge: 15 * 24 * 60 *1000
+        });
+
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            sameSite:"lax",
+            maxAge: 7 * 24 * 60 * 60 *1000
+        });
+
+        res.status(HTTP_STATUS.OK).json(
+            new ApiResponse(
+                HTTP_STATUS.OK,
+                null,
+                "Logged out successfully"
+            )
+        )
+    }
 }
 
 export const authController = new AuthController();
