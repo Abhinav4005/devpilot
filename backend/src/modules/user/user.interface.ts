@@ -1,7 +1,7 @@
-import { Document } from "mongoose";
+import { HydratedDocument } from "mongoose";
 import { UserRole } from "./user.enum.js";
 
-export interface IUser extends Document {
+export interface IUser {
     username?: string;
     firstName: string;
     lastName: string;
@@ -18,3 +18,5 @@ export interface IUser extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export type UserDocument = HydratedDocument<IUser>;

@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import indexRoutes from "./routes/index.route.js";
 import { errorHandler } from "./common/middleware/errorHandler.js";
 import { connectDB } from "./database/database.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -12,9 +13,11 @@ const app = express();
 
 app.use(express.json());
 
-app.use(errorHandler);
+app.use(cookieParser());
 
 app.use("/api/v1", indexRoutes);
+
+app.use(errorHandler);
 
 const startServer = async () => {
     try {

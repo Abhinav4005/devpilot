@@ -43,4 +43,15 @@ export const registerSchema = z.object({
     .refine((data) => data.body.password === data.body.confirmPassword, {
         message: "Password and Confirm Password do not match",
         path: ["confirmPassword"]
-    })
+    });
+
+export const loginSchema = z.object({
+    body: z.object({
+        email: z
+            .string()
+            .trim()
+            .email("Invalid email address")
+            .transform((email) => email.toLowerCase()),
+        password: z.string().min(1, "Password is required"),
+    }),
+});
