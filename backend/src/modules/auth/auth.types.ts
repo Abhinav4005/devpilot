@@ -1,5 +1,8 @@
+import { UserRole } from "../user/user.enum.js";
+import { IUser } from "../user/user.interface.js";
+
 export interface RegisterDto {
-    username : string,
+    username: string,
     firstName: string,
     lastName: string,
     email: string,
@@ -8,9 +11,25 @@ export interface RegisterDto {
 }
 
 export interface CreateUserDto {
-    username : string,
+    username: string,
     firstName: string,
     lastName: string,
     email: string,
     password: string,
 }
+
+export interface UserResponseDto {
+    id: string;
+    username?: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: UserRole;
+    isVerified: boolean;
+    isActive: boolean;
+}
+
+export type LoginDto = Pick<
+    IUser,
+    "email" | "password"
+>

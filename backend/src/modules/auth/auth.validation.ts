@@ -11,13 +11,13 @@ export const registerSchema = z.object({
         firstName: z
             .string()
             .trim()
-            .min(2, "First name must be at least 3 characters")
+            .min(2, "First name must be at least 2 characters")
             .max(30, "First name cannot exceed 30 characters"),
 
         lastName: z
             .string()
             .trim()
-            .min(2, "Last name must be at least 3 characters")
+            .min(2, "Last name must be at least 2 characters")
             .max(30, "Last name cannot exceed 30 characters"),
 
         email: z
@@ -43,4 +43,17 @@ export const registerSchema = z.object({
     .refine((data) => data.body.password === data.body.confirmPassword, {
         message: "Password and Confirm Password do not match",
         path: ["confirmPassword"]
-    })
+    });
+
+export const loginSchema = z.object({
+    body: z.object({
+        email: z
+            .string()
+            .trim()
+            .email("Invalid email address")
+            .transform((email) => email.toLowerCase()),
+        password: z.string().min(1, "Password is required"),
+    }),
+    params: z.object({}),
+    query: z.object({})
+});

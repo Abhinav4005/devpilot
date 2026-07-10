@@ -21,7 +21,10 @@ const envSchema = z.object({
         .default("15m"),
     REFRESH_TOKEN_EXPIRES_IN: z
         .string()
-        .default("7d")
+        .default("7d"),
+    BCRYPT_SALT_ROUND: z
+        .coerce.number()
+        .default(10)
 });
 
 const parse = envSchema.safeParse(process.env);
