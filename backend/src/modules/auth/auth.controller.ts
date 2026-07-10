@@ -30,6 +30,7 @@ export class AuthController {
             httpOnly: true,
             sameSite: "lax",
             secure: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
         res.status(HTTP_STATUS.OK).json(
@@ -59,13 +60,15 @@ export class AuthController {
             httpOnly: true,
             sameSite: "lax",
             secure: true,
+            maxAge: 15 * 60 * 60 * 1000
         });
 
         res.cookie("refreshToken", newRefreshToken, {
             httpOnly: true,
             sameSite: "lax",
             secure: true,
-        });
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
 
         res.status(HTTP_STATUS.OK).json(
             new ApiResponse(

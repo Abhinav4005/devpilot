@@ -54,4 +54,6 @@ export const loginSchema = z.object({
             .transform((email) => email.toLowerCase()),
         password: z.string().min(1, "Password is required"),
     }),
+    params: z.object({}),
+    query: z.object({})
 });

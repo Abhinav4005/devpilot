@@ -23,7 +23,7 @@ const envSchema = z.object({
         .string()
         .default("7d"),
     BCRYPT_SALT_ROUND: z
-        .number()
+        .coerce.number()
         .default(10)
 });
 
