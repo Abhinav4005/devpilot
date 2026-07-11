@@ -4,7 +4,7 @@ import Workspace from "./workspace.model.js";
 import { CreateWorkspaceDto, UpdateWorkspaceDto } from "./workspace.types.js";
 
 export class WorkspaceRepository {
-    async create(workspaceData: CreateWorkspaceDto, session: ClientSession): Promise<WorkspaceDocument | null> {
+    async create(workspaceData: CreateWorkspaceDto, session: ClientSession): Promise<WorkspaceDocument> {
         const [workspace] = await Workspace.create(
             [
                 {
@@ -25,7 +25,7 @@ export class WorkspaceRepository {
         return await Workspace.findById(id);
     }
 
-    async findByOwner(ownerId: string): Promise<WorkspaceDocument[] | null> {
+    async findByOwner(ownerId: string): Promise<WorkspaceDocument[]> {
         return await Workspace.find({ owner: ownerId });
     }
 
