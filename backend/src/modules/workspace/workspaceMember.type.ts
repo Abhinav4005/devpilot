@@ -1,4 +1,8 @@
-import { z } from "zod";
-import { workspaceMemberSchema } from "./workspaceMember.validation.js";
+import { Types } from "mongoose";
+import { WorkspaceRole } from "./workspaceMember.enum.js";
 
-export type createWorkspaceMemberDto = z.infer<typeof workspaceMemberSchema>["body"];
+export interface CreateWorkspaceMemberDto {
+    workspaceId: Types.ObjectId;
+    userId: string;
+    role: WorkspaceRole;
+}

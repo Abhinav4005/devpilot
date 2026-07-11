@@ -1,17 +1,27 @@
+import { ClientSession } from "mongoose";
 import { WorkspaceDocument } from "./workspace.interface.js";
 import Workspace from "./workspace.model.js";
 import { CreateWorkspaceDto, UpdateWorkspaceDto } from "./workspace.types.js";
 
 export class WorkspaceRepository {
-    async createWorkspace (workspaceData: CreateWorkspaceDto): Promise<WorkspaceDocument | null> {
-        return await Workspace.create(workspaceData)
+    async create(workspaceData: CreateWorkspaceDto, session: ClientSession): Promise<WorkspaceDocument | null> {
+        const [workspace] = await Workspace.create(
+            [
+                {
+                    ...workspaceData
+                }
+            ],
+            { session }
+        );
+
+        return workspace;
     }
 
-    async findBySlug(slug: string): Promise<WorkspaceDocument | null>{
+    async findBySlug(slug: string): Promise<WorkspaceDocument | null> {
         return await Workspace.findOne({ slug });
     }
 
-    async findById(id: string): Promise<WorkspaceDocument | null>{
+    async findById(id: string): Promise<WorkspaceDocument | null> {
         return await Workspace.findById(id);
     }
 
@@ -19,7 +29,7 @@ export class WorkspaceRepository {
         return await Workspace.find({ owner: ownerId });
     }
 
-    async updateWorkspace(id: string, payload: UpdateWorkspaceDto): Promise<WorkspaceDocument | null> {
+    async update(id: string, payload: UpdateWorkspaceDto): Promise<WorkspaceDocument | null> {
         return await Workspace.findByIdAndUpdate(
             id,
             {
@@ -32,7 +42,7 @@ export class WorkspaceRepository {
         )
     }
 
-    async archive(id: string): Promise<WorkspaceDocument | null>{
+    async archive(id: string): Promise<WorkspaceDocument | null> {
         return await Workspace.findByIdAndUpdate(
             id,
             {

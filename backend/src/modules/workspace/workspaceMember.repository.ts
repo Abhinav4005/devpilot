@@ -1,10 +1,12 @@
+import { ClientSession } from "mongoose";
 import { WorkspaceMemberDocument } from "./workspaceMember.interface.js";
 import WorkspaceMember from "./workspaceMember.model.js";
-import { createWorkspaceMemberDto } from "./workspaceMember.type.js";
+import { CreateWorkspaceMemberDto } from "./workspaceMember.type.js";
 
 export class WorkspaceMemberRepository {
-    async createWorkspaceMember(userData: createWorkspaceMemberDto): Promise<WorkspaceMemberDocument | null> {
-        return await WorkspaceMember.create(userData);
+    async create(data: CreateWorkspaceMemberDto, session: ClientSession): Promise<WorkspaceMemberDocument> {
+        const [member] = await WorkspaceMember.create([data], { session });
+        return member;
     }
 }
 
