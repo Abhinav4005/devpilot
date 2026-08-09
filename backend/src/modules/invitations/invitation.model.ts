@@ -1,15 +1,16 @@
 import mongoose from "mongoose";
 import { WorkspaceRole } from "../workspace/workspaceMember.enum.js";
 import { InvitationStatus } from "./invitation.enum.js";
+import { IInvitation } from "./invitation.interface.js";
 
-const invitationSchema = new mongoose.Schema({
+const invitationSchema = new mongoose.Schema<IInvitation>({
     workspaceId: {
-        type: mongoose.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Workspace",
         required: true,
     },
     userId: {
-        type: mongoose.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
     },
@@ -20,7 +21,7 @@ const invitationSchema = new mongoose.Schema({
         trim: true
     },
     invitedBy: {
-        type: mongoose.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
     },
@@ -37,9 +38,9 @@ const invitationSchema = new mongoose.Schema({
     expiresAt: {
         type: Date,
         default: () => {
-            new Date(
+            return new Date(
                 Date.now() + 7 * 24 * 60 * 60 * 1000
-            )
+            );
         }
     },
     token: {
@@ -58,17 +59,26 @@ const invitationSchema = new mongoose.Schema({
 
 invitationSchema.index(
     {
-        workspaceId: 1, 
-        email: 1, 
+        workspaceId: 1,
+        email: 1,
         status: 1
     },
-    {unique: true,
+    {
+        unique: true,
         partialFilterExpression: {
             status: "PENDING"
         }
     }
 );
 
-const Invitation = mongoose.model("Invitation", invitationSchema);
+invitationSchema.index({
+    expiresAt: 1
+});
+
+invitationSchema.index({
+    token: 1
+})
+
+const Invitation = mongoose.model<IInvitation>("Invitation", invitationSchema);
 
 export default Invitation;

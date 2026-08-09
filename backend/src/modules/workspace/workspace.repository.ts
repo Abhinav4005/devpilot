@@ -4,7 +4,7 @@ import Workspace from "./workspace.model.js";
 import { CreateWorkspaceDto, UpdateWorkspaceDto } from "./workspace.types.js";
 
 export class WorkspaceRepository {
-    async create(workspaceData: CreateWorkspaceDto, session: ClientSession): Promise<WorkspaceDocument> {
+    async create(workspaceData: CreateWorkspaceDto, session?: ClientSession): Promise<WorkspaceDocument> {
         const [workspace] = await Workspace.create(
             [
                 {
