@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { invitationSchema } from "./invitation.validation.js";
+import { createInvitationSchema } from "./invitation.validation.js";
 import { InvitationStatus } from "./invitation.enum.js";
 import { WorkspaceRole } from "../workspace/workspaceMember.enum.js";
 import { Types } from "mongoose";
 
-export type CreateInvitationDto = z.infer<typeof invitationSchema>['body'];
+export type CreateInvitationDto = z.infer<typeof createInvitationSchema>['body'];
 
 export interface updateInvitationDto {
     status?: InvitationStatus;

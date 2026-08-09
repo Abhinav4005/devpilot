@@ -1,7 +1,7 @@
-import { z} from "zod";
+import { z } from "zod";
 import { WorkspaceRole } from "../workspace/workspaceMember.enum.js";
 
-export const invitationSchema = z.object({
+export const createInvitationSchema = z.object({
     body: z.object({
         email: z
             .string()
@@ -17,8 +17,17 @@ export const invitationSchema = z.object({
     params: z.object({
         workspaceId: z.string()
     })
-})
+});
 
-export const updateInvitationSchema = z.object({
-    
-})
+export const tokenParamSchema = z.object({
+    params: z.object({
+        token: z.string().min(1, "Invitation token is required")
+    })
+});
+
+export const cancelInvitationSchema = z.object({
+    params: z.object({
+        workspaceId: z.string(),
+        invitationId: z.string()
+    })
+});

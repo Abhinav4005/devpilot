@@ -56,7 +56,7 @@ export class InvitationService {
         const invitationPayload = {
             workspaceId,
             userId: user._id,
-            invitedBy: inviteMembership._id,
+            invitedBy: invitedBy,
             email: user.email,
             role: data.role ?? WorkspaceRole.MEMBER,
             status: InvitationStatus.PENDING,
@@ -151,7 +151,40 @@ export class InvitationService {
         return toInvitationResponse(updateInvitation);
     }
 
-    async cancel(token: string, userId: string) {
+    async cancel(invitationId: string, userId: string) {
+        const invitation = await invitationRepository.findById(invitationId);
+
+        if (!invitation) {
+            throw new AppError("Invitation not found", HTTP_STATUS.NOT_FOUND);
+        }
+
+        const member = await workspaceMemberRepository.findMember(invitation.workspaceId.toString(), userId);
+
+        if (!member) {
+            throw new AppError("You are not member of this workspace", HTTP_STATUS.BAD_REQUEST);
+        }
+
+        if (![WorkspaceRole.ADMIN, WorkspaceRole.OWNER].includes(member.role)) {
+            throw new AppError("You are not authorized to cancel this invitation", HTTP_STATUS.FORBIDDEN);
+        }
+
+        if (invitation.status !== InvitationStatus.PENDING) {
+            throw new AppError(`Invitation is already ${invitation.status.toLowerCase()}`, HTTP_STATUS.BAD_REQUEST)
+        }
+
+        const payload = {
+            status: InvitationStatus.CANCELLED,
+            token: null,
+        }
+
+        const updateInvitation = await invitationRepository.update(invitation.id, payload);
+
+        if (!updateInvitation) {
+            throw new AppError("Failed to update invitation", HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        }
+
+        return toInvitationResponse(updateInvitation);
+
     }
 
     private async validateInvitation(token: string, userId: string) {
@@ -187,3 +220,5 @@ export class InvitationService {
         return invitation;
     }
 }
+
+export const invitationService = new InvitationService();

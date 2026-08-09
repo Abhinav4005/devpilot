@@ -1,7 +1,7 @@
 import { env } from "../../config/env.js";
 import { AppError } from "../errors/AppError.js"
 import jwt from "jsonwebtoken";
-import { JWTPayload } from "./token.type.js";
+import { JWTPayload } from "./token.types.js";
 import { HTTP_STATUS } from "../constants/http-status.constants.js";
 
 export class TokenService {
