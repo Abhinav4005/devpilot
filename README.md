@@ -1,6 +1,6 @@
 # DevPilot
 
-A full-stack project management and collaboration tool built with a modern TypeScript stack. DevPilot provides workspace-based task and project management with a secure JWT authentication system.
+A full-stack project management and collaboration tool built with a modern TypeScript stack. DevPilot provides workspace-based task and project management with a secure JWT authentication system and stateful invitation workflows.
 
 ---
 
@@ -14,6 +14,7 @@ A full-stack project management and collaboration tool built with a modern TypeS
 | **MongoDB** + **Mongoose** | Database & ODM |
 | **Zod** | Environment & request validation |
 | **JWT** (jsonwebtoken) | Access & refresh token auth |
+| **Crypto (SHA-256)** | One-time invitation token hashing |
 | **bcryptjs** | Password hashing |
 | **cors** | Cross-origin resource sharing |
 | **cookie-parser** | HTTP cookie handling |
@@ -40,7 +41,7 @@ devpilot/
 │   │   │   ├── errors/           # AppError class
 │   │   │   ├── middleware/       # async, auth, validate, authorize middlewares
 │   │   │   ├── responses/        # ApiResponse class
-│   │   │   ├── services/         # TokenService (JWT)
+│   │   │   ├── services/         # TokenService (JWT) & token.types.ts
 │   │   │   └── types/            # Express type augmentations
 │   │   ├── config/
 │   │   │   └── env.ts            # Zod-validated environment config
@@ -48,8 +49,9 @@ devpilot/
 │   │   │   └── database.ts       # MongoDB connection
 │   │   ├── modules/
 │   │   │   ├── auth/             # Register, Login, Logout, Refresh, Me
-│   │   │   ├── user/             # User model, interface, repository
-│   │   │   ├── workspace/        # (coming soon)
+│   │   │   ├── invitations/      # Create, Accept, Reject, Cancel invitations (SHA-256)
+│   │   │   ├── workspace/        # Workspace creation, management, membership
+│   │   │   ├── user/             # User models and repositories
 │   │   │   ├── project/          # (coming soon)
 │   │   │   └── task/             # (coming soon)
 │   │   ├── routes/
@@ -59,6 +61,12 @@ devpilot/
 │   ├── .env                      # Environment variables (not committed)
 │   ├── package.json
 │   └── tsconfig.json
+│
+├── docs/                         # Documentation & Architectural Decision Records
+│   ├── adr/                      # Architectural Decision Records (ADR 001)
+│   ├── api/                      # API spec docs
+│   ├── lld/                      # Low-level design docs
+│   └── requirements/             # Requirement analysis
 │
 ├── frontend/
 │   ├── src/
@@ -75,9 +83,15 @@ devpilot/
 │   ├── package.json
 │   └── vite.config.ts
 │
-├── docs/                         # Product documentation
 └── docker/                       # Docker configuration (coming soon)
 ```
+
+---
+
+## Architectural Decision Records (ADRs)
+
+DevPilot documents architectural choices to ensure design clarity and maintainability:
+- **[ADR 001: Invitation Token Strategy](docs/adr/001-invitation-token-strategy.md)** — Evaluates JWT vs. Random One-Time Token strategy. Documents the choice of **Random One-Time Tokens hashed with SHA-256** for stateful invitations, instant revocation, single source of truth, and $O(1)$ database lookup performance.
 
 ---
 
@@ -114,7 +128,7 @@ devpilot/
    | `JWT_REFRESH_SECRET` | Secret for signing refresh tokens | — |
    | `ACCESS_TOKEN_EXPIRES_IN` | Access token expiry (e.g. `15m`) | `15m` |
    | `REFRESH_TOKEN_EXPIRES_IN` | Refresh token expiry (e.g. `7d`) | `7d` |
-   | `BCRYPT_SALT_ROUND` | bcrypt salt rounds for hashing | `10` |
+   | `BCRYPT_SALT_ROUND` | bcrypt salt rounds for password hashing | `10` |
 
 3. **Run the development server**
    ```bash
@@ -165,14 +179,33 @@ All endpoints are prefixed with `/api/v1`.
 | `POST` | `/api/v1/auth/register` | ❌ | Register a new user |
 | `POST` | `/api/v1/auth/login` | ❌ | Login and receive tokens (set as `httpOnly` cookies) |
 | `GET` | `/api/v1/auth/me` | ✅ | Get currently authenticated user |
-| `POST` | `/api/v1/auth/refresh-token` | ❌ | Refresh the access token using the refresh token cookie |
+| `POST` | `/api/v1/auth/refresh-token` | ❌ | Refresh access token using refresh token cookie |
 | `POST` | `/api/v1/auth/logout` | ❌ | Logout and clear auth cookies |
 
-### Authentication Flow
-- On **login**, both `accessToken` and `refreshToken` are set as `httpOnly`, `secure`, `SameSite=Lax` cookies.
-- The `accessToken` expires in `15m`. Use the `/refresh-token` endpoint to get a new one.
-- The `refreshToken` is hashed with bcrypt before being stored in the database.
-- On **logout**, both cookies are cleared and the refresh token is removed from the database.
+### Workspaces
+| Method | Endpoint | Auth Required | Description |
+|---|---|---|---|
+| `POST` | `/api/v1/workspaces` | ✅ | Create a new workspace |
+| `GET` | `/api/v1/workspaces` | ✅ | Get all workspaces of logged-in user |
+| `GET` | `/api/v1/workspaces/:id` | ✅ | Get workspace details by ID |
+| `PATCH` | `/api/v1/workspaces/:id` | ✅ | Update workspace details |
+| `PATCH` | `/api/v1/workspaces/:id/archive` | ✅ | Archive workspace |
+| `PATCH` | `/api/v1/workspaces/:id/unarchive` | ✅ | Unarchive workspace |
+
+### Invitations
+| Method | Endpoint | Auth Required | Description |
+|---|---|---|---|
+| `POST` | `/api/v1/workspaces/:workspaceId/invitations` | ✅ | Invite a user to workspace (Owner/Admin) |
+| `POST` | `/api/v1/invitations/:token/accept` | ✅ | Accept an invitation token |
+| `POST` | `/api/v1/invitations/:token/reject` | ✅ | Reject an invitation token |
+| `DELETE` | `/api/v1/workspaces/:workspaceId/invitations/:invitationId` | ✅ | Cancel a pending invitation (Owner/Admin) |
+
+---
+
+## Authentication & Security Flow
+- **Authentication**: On login, `accessToken` and `refreshToken` are set as `httpOnly`, `secure`, `SameSite=Lax` cookies.
+- **Invitation Tokens**: High-entropy 256-bit random tokens are hashed with **SHA-256** prior to database storage, enabling $O(1)$ indexed lookups and instant revocation without token blacklists.
+- **Race Condition Safety**: Workspace member creation and invitation status updates are wrapped in Mongoose transactions with unique composite indexes (`{ workspaceId: 1, userId: 1 }`).
 
 ---
 
@@ -190,7 +223,7 @@ All endpoints are prefixed with `/api/v1`.
 |---|---|---|
 | `dev` | `vite` | Start Vite dev server |
 | `build` | `tsc -b && vite build` | Type-check and build for production |
-| `preview` | `vite preview` | Preview the production build locally |
+| `preview` | `vite preview` | Preview production build locally |
 | `lint` | `eslint .` | Run ESLint |
 
 ---

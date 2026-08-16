@@ -8,8 +8,6 @@ import { authRepository } from "../auth/auth.repository.js";
 import { invitationRepository } from "./invitation.repository.js";
 import crypto from "crypto";
 import { InvitationStatus } from "./invitation.enum.js";
-import bcrypt from "bcryptjs";
-import { env } from "../../config/env.js";
 import { toInvitationResponse } from "./invitation.mapper.js";
 import mongoose, { Types } from "mongoose";
 
@@ -83,7 +81,7 @@ export class InvitationService {
             throw new AppError("Workspace is archived", HTTP_STATUS.BAD_REQUEST);
         }
 
-        if (userId !== invitation?.userId.toString()) {
+        if (userId !== invitation.userId.toString()) {
             throw new AppError("User is not authorized to accept this invitation", HTTP_STATUS.FORBIDDEN);
         }
 
